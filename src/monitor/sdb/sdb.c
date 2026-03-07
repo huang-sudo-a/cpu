@@ -12,17 +12,21 @@
 *
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
-
+//#pragma once  //11111
 #include <isa.h>
 #include <cpu/cpu.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "sdb.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <cpu/cpu.h>
 
 static int is_batch_mode = false;
 
 void init_regex();
 void init_wp_pool();
+// void execute(uint64_t n);
 
 /* We use the `readline' library to provide more flexibility to read from stdin. */
 static char* rl_gets() {
@@ -52,6 +56,38 @@ static int cmd_q(char *args) {
   return -1;
 }
 
+static int cmd_si(char *args) {
+  //char to int
+  char *end;  // 记录转换结束的位置
+  uint64_t dec_num = strtol(args, &end, 10);//youfengxian unsigned
+  if (*end != '\0') {
+    printf("error：%ld invalid number\n", dec_num);
+    return 0;
+  }
+
+  cpu_exec(dec_num);
+  return 0;
+  
+}
+
+static int cmd_info(char *args){
+  if (*args=='r')isa_reg_display();
+  else  if (*args=='w'){}//todo
+  else {
+    printf("invalid option\n");
+  }
+  return 0;
+}
+
+static int cmd_w(char *args){
+  //to do
+  return 0;
+}
+
+
+
+
+
 static int cmd_help(char *args);
 
 static struct {
@@ -62,7 +98,9 @@ static struct {
   { "help", "Display information about all supported commands", cmd_help },
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
-
+  { "si", "Step execute",cmd_si},
+  { "info", "print statement",cmd_info},
+  { "w", "set watchpoint", cmd_w},
   /* TODO: Add more commands */
 
 };
@@ -101,7 +139,7 @@ void sdb_mainloop() {
     cmd_c(NULL);
     return;
   }
-
+  //check_wp();todo 
   for (char *str; (str = rl_gets()) != NULL; ) {
     char *str_end = str + strlen(str);
 
