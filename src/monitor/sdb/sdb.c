@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <cpu/cpu.h>
-
+#include <memory/paddr.h>
 static int is_batch_mode = false;
 
 void init_regex();
@@ -84,6 +84,19 @@ static int cmd_w(char *args){
   return 0;
 }
 
+static int cmd_x(char *args){
+  bool check=false;
+  expr(args,&check);//neicunxielou
+  if (check){
+    printf("invalid expr\n");
+    return 0;
+  }
+  /*int n=get_nrtoken();
+  char *result=get_token();*/
+  word_t re=  paddr_read(2147483649,4);
+  printf("%u",re);
+  return 0;
+}
 
 
 
@@ -101,6 +114,7 @@ static struct {
   { "si", "Step execute",cmd_si},
   { "info", "print statement",cmd_info},
   { "w", "set watchpoint", cmd_w},
+  { "x", "read memory", cmd_x},
   /* TODO: Add more commands */
 
 };

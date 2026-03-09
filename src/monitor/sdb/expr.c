@@ -60,7 +60,7 @@ void init_regex() {
       panic("regex compilation failed: %s\n%s", error_msg, rules[i].regex);
     }
   }
-}
+}//TK_NOTYPE
 
 typedef struct token {
   int type;
@@ -89,15 +89,36 @@ static bool make_token(char *e) {
 
         position += substr_len;
 
-        /* TODO: Now a new token is recognized with rules[i]. Add codes
+        /*: TODO: Now a new token is recognized with rules[i]. Add codes
          * to record the token in the array `tokens'. For certain types
          * of tokens, some extra actions should be performed.
          */
 
-        switch (rules[i].token_type) {
+       /* switch (rules[i].token_type) {
+	  case TK_NOTYPE:
+            // 空格不存储，直接跳过
+            break;
+	  case TK_NUM: // 数字：存入tokens数组
+          tokens[nr_token].type = TK_NUM;
+          strncpy(tokens[nr_token].str, substr_start, substr_len);
+          tokens[nr_token].str[substr_len] = '\0'; // 确保字符串结束
+          nr_token++;
+          break;
+          case '+': // 加号：存入tokens数组
+          case TK_EQ: // 等于号：存入tokens数组
+          tokens[nr_token].type = rules[i].token_type;
+          strncpy(tokens[nr_token].str, substr_start, substr_len);
+          tokens[nr_token].str[substr_len] = '\0';
+          nr_token++;
+          break;
           default: TODO();
-        }
-
+        }*/
+/*
+static struct rule {
+ 31   const char *regex;
+ 32   int token_type;
+ 33 } 
+*/
         break;
       }
     }
@@ -123,3 +144,11 @@ word_t expr(char *e, bool *success) {
 
   return 0;
 }
+
+/*const token* get_token(){
+  return tokens;
+}
+
+const int get_nrtoken(){
+  return 
+*/
