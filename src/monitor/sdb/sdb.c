@@ -85,21 +85,28 @@ static int cmd_w(char *args){
 }
 
 static int cmd_x(char *args){
+  int step=0,address=0;
+  char *next;
+  step=strtol(args,&next,10);
+  address=strtol(next+1,NULL,16);
+  for (int i=0;i<step;i++){
+    word_t re=  paddr_read(address,4);
+    printf("%c\n",re);
+    address+=4;
+  }
+  return 0;
+}
+
+static int cmd_p(char *args){
   bool check=false;
-  expr(args,&check);//neicunxielou
+  int out=expr(args,&check);
   if (check){
     printf("invalid expr\n");
     return 0;
   }
-  /*int n=get_nrtoken();
-  char *result=get_token();*/
-  word_t re=  paddr_read(2147483649,4);
-  printf("%u",re);
+  printf("%d\n",out);
   return 0;
 }
-
-
-
 
 static int cmd_help(char *args);
 
@@ -115,6 +122,7 @@ static struct {
   { "info", "print statement",cmd_info},
   { "w", "set watchpoint", cmd_w},
   { "x", "read memory", cmd_x},
+  { "p", "caculate expr",cmd_p},
   /* TODO: Add more commands */
 
 };

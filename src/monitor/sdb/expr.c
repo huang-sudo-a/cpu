@@ -19,10 +19,14 @@
  * Type 'man regex' for more information about POSIX regex functions.
  */
 #include <regex.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <limits.h>
 
 enum {
   TK_NOTYPE = 256, TK_EQ,
-  TK_NUM
+  TK_NUM,TK_TIME,TK_DIV,TK_LP,TK_RP
   /* TODO: Add more token types */
 
 };
@@ -39,6 +43,11 @@ static struct rule {
   {"\\+", '+'},         // plus
   {"==", TK_EQ},        // equal
   {"[0-9]+",TK_NUM},    //number
+  {"\\-",'-'},
+  {"\\*", TK_TIME},
+  {"\\/", TK_DIV},
+  {"\\(", TK_LP},
+  {"\\)", TK_RP},
 };
 
 #define NR_REGEX ARRLEN(rules)
@@ -93,26 +102,32 @@ static bool make_token(char *e) {
          * to record the token in the array `tokens'. For certain types
          * of tokens, some extra actions should be performed.
          */
+        switch (rules[i].token_type) {
+        case TK_NOTYPE:
+        // 空格，直接跳过，不存 token
+        break;
+        case TK_NUM:
+        case TK_TIME:
+        case TK_DIV:
+        case TK_LP:
+        case TK_RP:
+        case '+':
+        case '-':
+        // 这些都是要存的普通 token
+        if (nr_token >= 32) {printf("the array is full\n");return false; }
+        
+        tokens[nr_token].type =rules[i].token_type;
+        strncpy(tokens[nr_token].str, substr_start, substr_len);
+        tokens[nr_token].str[substr_len] = '\0';
+        nr_token++;
+        break;
 
-       /* switch (rules[i].token_type) {
-	  case TK_NOTYPE:
-            // 空格不存储，直接跳过
-            break;
-	  case TK_NUM: // 数字：存入tokens数组
-          tokens[nr_token].type = TK_NUM;
-          strncpy(tokens[nr_token].str, substr_start, substr_len);
-          tokens[nr_token].str[substr_len] = '\0'; // 确保字符串结束
-          nr_token++;
-          break;
-          case '+': // 加号：存入tokens数组
-          case TK_EQ: // 等于号：存入tokens数组
-          tokens[nr_token].type = rules[i].token_type;
-          strncpy(tokens[nr_token].str, substr_start, substr_len);
-          tokens[nr_token].str[substr_len] = '\0';
-          nr_token++;
-          break;
-          default: TODO();
-        }*/
+    default:
+        // 未知的 token 类型，说明 rules 数组加了新规则但 switch 没跟上
+        printf("1111\n");
+	TODO();
+        break;
+        }
 /*
 static struct rule {
  31   const char *regex;
@@ -131,24 +146,71 @@ static struct rule {
 
   return true;
 }
-
+int eval(int p,int q);
 
 word_t expr(char *e, bool *success) {
   if (!make_token(e)) {
     *success = false;
     return 0;
   }
-
+  word_t outcome=eval(0,nr_token-1);
   /* TODO: Insert codes to evaluate the expression. */
-  TODO();
+  //TODO();:
 
-  return 0;
+  return outcome;//0
 }
 
-/*const token* get_token(){
-  return tokens;
+
+
+/*const int get_nrtoken(){
+  return nr_token;
+}*/
+
+
+
+//expr
+static bool check_parentheses(int p,int q){ 
+        if(p=='('&&q==')')return true;
+        return false;
 }
 
-const int get_nrtoken(){
-  return 
-*/
+static int searchmain(int p,int q){ 
+        int first2=p;
+        while(p<=q){
+                if(tokens[q].type==')')return first2;//wrong
+                if (tokens[q].type=='+'||tokens[q].type=='-')return q;
+                if(first2==p&&(tokens[q].type==TK_TIME||tokens[q].type==TK_DIV))first2=q;
+                q--;
+        }
+        return first2;
+}// search main operator
+
+int eval(int p,int q){ 
+  printf("p:%d  q:%d\n",p,q);  
+  if (p > q) {
+    printf("error\n");
+  }
+  else if (p == q) {
+    return strtol(tokens[q].str,NULL,0);
+  }
+  else if (check_parentheses(p, q) == true) {
+    /* The expression is surrounded by a matched pair of parentheses.
+     * If that is the case, just throw away the parentheses.
+     */    
+    return eval(p + 1, q - 1); 
+  }
+  else {
+    int op = searchmain(p,q);
+    uint32_t val1 = eval(p, op - 1); 
+    uint32_t val2 = eval(op + 1, q); 
+    int op_type=tokens[op].type;
+    switch (op_type) {
+      case '+': return val1 + val2;
+      case '-': return val1 - val2;
+      case TK_TIME: return val1 * val2;
+      case TK_DIV: return val1 / val2;
+      default: printf("op_type:%c\n",op_type);//assert(0);
+      }    
+  }
+  return -1;//risk
+}
