@@ -20,9 +20,9 @@
 typedef struct watchpoint {
   int NO;
   struct watchpoint *next;
-  char *exp;
+  char exp[32];
+  int last;
   /* TODO: Add more members if necessary */
-
 } WP;
 
 static WP wp_pool[NR_WP] = {};
@@ -39,10 +39,87 @@ void init_wp_pool() {
   free_ = wp_pool;
 }
 
-/* TODO: Implement the functionality of watchpoint */
-//void set_wp(char *add){   uncompeletment;
-  
+WP* new_wp(char *args,bool *success){
+  WP* newwp=free_;
+  word_t outcome=expr(args,success);
+  if(!*success){
+	printf("wrong expri\n");
+	return newwp;
+  }
+  if(free_==NULL){
+	printf("no free wp\n");
+	*success=false;
+  }
+  strncpy(newwp->exp, args, sizeof(newwp->exp) - 1);
+  newwp->last=outcome;
+  newwp->next=NULL;
+  free_=free_->next;
+  WP *h=head;
+  if(h==NULL){head=newwp;h=newwp;}
+  while(h->next!=NULL){h=h->next;}
+  h->next=newwp;
+  return newwp;
+}
 
+void free_wp(int n){
+  WP* h=head;
+  WP* pre=NULL;
+  while(h!=NULL){
+    if(h->NO==n){
+      if(pre==NULL)head=h->next;
+      else pre->next=h->next;
+      h->next=free_;
+      free_=h;
+      printf("free NO.%d wp successfully\n",n);
+      return ;
+    }
+    pre=h;
+    h=h->next;
+  }
+  printf("no NO.%d wp\n",n);
+  return ;
+}
+
+void show_wp(){
+	WP* h=head;
+	int val;
+	bool success=true;
+	if(h==NULL){
+		printf("no wp yet\n");
+		return ;
+	}
+	while(h!=NULL){
+		val=expr(h->exp,&success);
+		if(!success){
+			printf("NO.%d wp are invild\n",h->NO);
+			continue;
+		}
+		printf("NO.%d expr:%s val= %d\n",h->NO,h->exp,val);
+		h=h->next;	
+
+  }
+}
+void wp_check(){
+  WP* h=head;
+        int val;
+        bool success=true;
+        if(h==NULL){
+          return ;
+        }
+        while(h!=NULL){
+                val=expr(h->exp,&success);
+                if(!success){
+                        printf("NO.%d wp are invild\n",h->NO);
+                        continue;
+                }
+		if(h->last!=val){
+			printf("NO.%d expr:%s has changed now val= %d,last=%d\n",h->NO,h->exp,val,h->last);
+			getchar();
+		}
+    h=h->next;
+  }
+           return ;
+}
 
 
 

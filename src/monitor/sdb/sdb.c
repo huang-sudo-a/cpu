@@ -72,7 +72,7 @@ static int cmd_si(char *args) {
 
 static int cmd_info(char *args){
   if (*args=='r')isa_reg_display();
-  else  if (*args=='w'){}//todo
+  else  if (*args=='w'){show_wp();}
   else {
     printf("invalid option\n");
   }
@@ -80,7 +80,17 @@ static int cmd_info(char *args){
 }
 
 static int cmd_w(char *args){
-  //to do
+  bool success=true;
+  new_wp(args,&success);
+  if(!success){
+  printf("set watchpoint erro\n");
+  return 0;
+  }
+  else {
+    printf("set wp:%s successfully\n",args);
+  }
+
+
   return 0;
 }
 
@@ -96,11 +106,16 @@ static int cmd_x(char *args){
   }
   return 0;
 }
+static int cmd_d(char *args){
+  int no=strtol(args,NULL,10);
+  free_wp(no);
+  return 0;
+}
 
 static int cmd_p(char *args){
-  bool check=false;
+  bool check=true;
   int out=expr(args,&check);
-  if (check){
+  if (!check){
     printf("invalid expr\n");
     return 0;
   }
@@ -123,6 +138,7 @@ static struct {
   { "w", "set watchpoint", cmd_w},
   { "x", "read memory", cmd_x},
   { "p", "caculate expr",cmd_p},
+  { "d", "delete watchpoint", cmd_d},
   /* TODO: Add more commands */
 
 };
